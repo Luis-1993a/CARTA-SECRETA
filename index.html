@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Carta Secreta - King FC</title>
   <style>
     body {
@@ -28,11 +27,12 @@
       max-width: 400px;
       margin: 0 auto;
       box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+      user-select: none; /* evitar selección */
     }
   </style>
 </head>
 <body>
-  <img src="logo.png" alt="King FC Logo" class="logo">
+  <img src="logo.png" alt="King FC Logo" class="logo" />
   <h1>Carta Secreta</h1>
   <div class="card" id="card">Cargando...</div>
 
@@ -47,8 +47,31 @@
       'Gol al último minuto x2'
     ];
 
-    const cartaAleatoria = cartas[Math.floor(Math.random() * cartas.length)];
-    document.getElementById('card').innerText = cartaAleatoria;
+    // 48 horas en milisegundos
+    const TIEMPO_48H = 48 * 60 * 60 * 1000;
+
+    function obtenerCarta() {
+      const ahora = new Date().getTime();
+      const cartaGuardada = localStorage.getItem('cartaSecreta');
+      const fechaGuardada = localStorage.getItem('fechaCarta');
+
+      if (cartaGuardada && fechaGuardada) {
+        const tiempoPasado = ahora - parseInt(fechaGuardada, 10);
+
+        if (tiempoPasado < TIEMPO_48H) {
+          // Si no han pasado 48 horas, devolver carta guardada
+          return cartaGuardada;
+        }
+      }
+
+      // Si no hay carta o ya pasaron 48h, elegir nueva carta y guardar
+      const cartaNueva = cartas[Math.floor(Math.random() * cartas.length)];
+      localStorage.setItem('cartaSecreta', cartaNueva);
+      localStorage.setItem('fechaCarta', ahora.toString());
+      return cartaNueva;
+    }
+
+    document.getElementById('card').innerText = obtenerCarta();
   </script>
 </body>
 </html>
