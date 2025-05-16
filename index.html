@@ -34,7 +34,12 @@
       max-width: 400px;
       margin: 0 auto;
       box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
-      user-select: none; /* evitar selección */
+      user-select: none;
+    }
+    .error {
+      color: #f55;
+      font-weight: bold;
+      font-size: 20px;
     }
   </style>
 </head>
@@ -42,45 +47,71 @@
   <img src="logo.png" alt="King FC Logo" class="logo" />
   <h1>Carta Secreta</h1>
   <div class="jornada">JORNADA 1</div>
-  <div class="card" id="card">Cargando...</div>
+  <div id="content"></div>
 
   <script>
-    const cartas = [
-      'Gol de cabeza x2',
-      'Robo carta secreta',
-      'Anula carta secreta',
-      'Si hay penalti, gol x2',
-      'Carta espejo',
-      'Joker (Carta libre)',
-      'Gol al último minuto x2'
-    ];
+    const PASSWORD = 'pajin123'; // Cambia la contraseña aquí
+    const MAX_ACCESOS = 10;
 
-    // 48 horas en milisegundos
-    const TIEMPO_48H = 48 * 60 * 60 * 1000;
+    function mostrarCarta() {
+      const cartas = [
+        'Gol de cabeza x2',
+        'Robo carta secreta',
+        'Anula carta secreta',
+        'Si hay penalti, gol x2',
+        'Carta espejo',
+        'Joker (Carta libre)',
+        'Gol al último minuto x2'
+      ];
 
-    function obtenerCarta() {
-      const ahora = new Date().getTime();
-      const cartaGuardada = localStorage.getItem('cartaSecreta');
-      const fechaGuardada = localStorage.getItem('fechaCarta');
+      // 48 horas en milisegundos
+      const TIEMPO_48H = 48 * 60 * 60 * 1000;
 
-      if (cartaGuardada && fechaGuardada) {
-        const tiempoPasado = ahora - parseInt(fechaGuardada, 10);
+      function obtenerCarta() {
+        const ahora = new Date().getTime();
+        const cartaGuardada = localStorage.getItem('cartaSecreta');
+        const fechaGuardada = localStorage.getItem('fechaCarta');
 
-        if (tiempoPasado < TIEMPO_48H) {
-          // Si no han pasado 48 horas, devolver carta guardada
-          return cartaGuardada;
+        if (cartaGuardada && fechaGuardada) {
+          const tiempoPasado = ahora - parseInt(fechaGuardada, 10);
+
+          if (tiempoPasado < TIEMPO_48H) {
+            return cartaGuardada;
+          }
         }
+
+        const cartaNueva = cartas[Math.floor(Math.random() * cartas.length)];
+        localStorage.setItem('cartaSecreta', cartaNueva);
+        localStorage.setItem('fechaCarta', ahora.toString());
+        return cartaNueva;
       }
 
-      // Si no hay carta o ya pasaron 48h, elegir nueva carta y guardar
-      const cartaNueva = cartas[Math.floor(Math.random() * cartas.length)];
-      localStorage.setItem('cartaSecreta', cartaNueva);
-      localStorage.setItem('fechaCarta', ahora.toString());
-      return cartaNueva;
+      // Mostrar la carta en el div content
+      const contentDiv = document.getElementById('content');
+      contentDiv.innerHTML = `<div class="card">${obtenerCarta()}</div>`;
     }
 
-    document.getElementById('card').innerText = obtenerCarta();
+    function mostrarError(msg) {
+      const contentDiv = document.getElementById('content');
+      contentDiv.innerHTML = `<div class="error">${msg}</div>`;
+    }
+
+    // Control de accesos
+    let accesos = parseInt(localStorage.getItem('contadorAccesos') || '0', 10);
+
+    if (accesos >= MAX_ACCESOS) {
+      mostrarError('Límite de accesos alcanzado. No se puede entrar.');
+    } else {
+      let pass = prompt('Ingresa la contraseña para acceder:');
+      if (pass === PASSWORD) {
+        // Sumar 1 al contador y guardar
+        accesos++;
+        localStorage.setItem('contadorAccesos', accesos.toString());
+        mostrarCarta();
+      } else {
+        mostrarError('Contraseña incorrecta. Acceso denegado.');
+      }
+    }
   </script>
 </body>
 </html>
-
