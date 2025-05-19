@@ -2,115 +2,88 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Carta Secreta - King FC</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Carta Secreta</title>
   <style>
     body {
-      background-color: #111;
-      color: white;
-      font-family: 'Arial', sans-serif;
-      text-align: center;
-      padding: 50px;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
     }
-    .logo {
-      max-width: 150px;
-      margin-bottom: 30px;
-    }
-    .jornada {
-      font-size: 32px;
-      font-weight: bold;
-      margin-bottom: 20px;
-      color: #ffcc00;
-      text-shadow: 1px 1px 4px #000;
+    input, button {
+      padding: 0.5rem;
+      margin: 0.5rem;
     }
     .card {
-      background-color: #8b0000;
-      color: white;
-      border-radius: 15px;
-      padding: 40px;
-      font-size: 24px;
+      margin-top: 2rem;
+      font-size: 1.5rem;
       font-weight: bold;
-      width: 80%;
-      max-width: 400px;
-      margin: 0 auto;
-      box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
-      user-select: none;
-    }
-    .error {
-      color: #f55;
-      font-weight: bold;
-      font-size: 20px;
+      color: darkblue;
     }
   </style>
 </head>
 <body>
-  <img src="logo.png" alt="King FC Logo" class="logo" />
-  <h1>Carta Secreta</h1>
-  <div class="jornada">JORNADA 1</div>
-  <div id="content"></div>
+  <h1>Bienvenido a Carta Secreta</h1>
+  <div id="login">
+    <p>Ingresa tu clave única:</p>
+    <input type="text" id="claveInput" />
+    <button onclick="verificarClave()">Entrar</button>
+    <p id="error" style="color: red;"></p>
+  </div>
+  <div id="cartaSecreta" style="display:none">
+    <p>Tu carta secreta es:</p>
+    <div class="card" id="cartaTexto"></div>
+  </div>
 
   <script>
-    const PASSWORD = 'Jornada1'; // Cambia la contraseña aquí
-    const MAX_ACCESOS = 12;
+    const clavesValidas = [
+      'CCJ1', 'TFCJ1', 'LMGJ1', 'LCJ1', 'LPJ1',
+      'SFCJ1', 'TTJ1', 'TTGJ1', 'RBFJ1', 'LGJ1'
+    ];
 
-    function mostrarCarta() {
-      const cartas = [
-        'Gol de cabeza x2',
-        'Robo carta secreta',
-        'Anula carta secreta',
-        'Si hay penalti, gol x2',
-        'Carta espejo',
-        'Joker (Carta libre)',
-        'Gol al último minuto x2'
-      ];
+    const cartas = [
+      'Gol de cabeza x2',
+      'Robo carta secreta',
+      'Anula carta secreta',
+      'Si hay penalti, gol x2',
+      'Carta espejo',
+      'Joker (Carta libre)',
+      'Gol al último minuto x2'
+    ];
 
-      // 48 horas en milisegundos
-      const TIEMPO_48H = 48 * 60 * 60 * 1000;
+    const claveInput = document.getElementById('claveInput');
+    const errorMsg = document.getElementById('error');
+    const cartaTexto = document.getElementById('cartaTexto');
+    const cartaDiv = document.getElementById('cartaSecreta');
 
-      function obtenerCarta() {
-        const ahora = new Date().getTime();
-        const cartaGuardada = localStorage.getItem('cartaSecreta');
-        const fechaGuardada = localStorage.getItem('fechaCarta');
+    function verificarClave() {
+      const clave = claveInput.value.trim().toUpperCase();
+      const guardado = JSON.parse(localStorage.getItem(clave));
 
-        if (cartaGuardada && fechaGuardada) {
-          const tiempoPasado = ahora - parseInt(fechaGuardada, 10);
-
-          if (tiempoPasado < TIEMPO_48H) {
-            return cartaGuardada;
-          }
-        }
-
-        const cartaNueva = cartas[Math.floor(Math.random() * cartas.length)];
-        localStorage.setItem('cartaSecreta', cartaNueva);
-        localStorage.setItem('fechaCarta', ahora.toString());
-        return cartaNueva;
+      if (!clavesValidas.includes(clave)) {
+        errorMsg.textContent = 'Clave inválida.';
+        return;
       }
 
-      // Mostrar la carta en el div content
-      const contentDiv = document.getElementById('content');
-      contentDiv.innerHTML = `<div class="card">${obtenerCarta()}</div>`;
-    }
+      const ahora = Date.now();
 
-    function mostrarError(msg) {
-      const contentDiv = document.getElementById('content');
-      contentDiv.innerHTML = `<div class="error">${msg}</div>`;
-    }
-
-    // Control de accesos
-    let accesos = parseInt(localStorage.getItem('contadorAccesos') || '0', 10);
-
-    if (accesos >= MAX_ACCESOS) {
-      mostrarError('Límite de accesos alcanzado. No se puede entrar.');
-    } else {
-      let pass = prompt('Ingresa la contraseña para acceder:');
-      if (pass === PASSWORD) {
-        // Sumar 1 al contador y guardar
-        accesos++;
-        localStorage.setItem('contadorAccesos', accesos.toString());
-        mostrarCarta();
+      if (guardado && ahora < guardado.expira) {
+        mostrarCarta(guardado.carta);
       } else {
-        mostrarError('Contraseña incorrecta. Acceso denegado.');
+        const carta = cartas[Math.floor(Math.random() * cartas.length)];
+        const expira = ahora + 24 * 60 * 60 * 1000; // 24 horas
+        localStorage.setItem(clave, JSON.stringify({ carta, expira }));
+        mostrarCarta(carta);
       }
+
+      document.getElementById('login').style.display = 'none';
+      cartaDiv.style.display = 'block';
+    }
+
+    function mostrarCarta(carta) {
+      cartaTexto.textContent = carta;
     }
   </script>
 </body>
