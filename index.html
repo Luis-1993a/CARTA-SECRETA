@@ -3,35 +3,81 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Carta Secreta</title>
+  <title>Carta Secreta - Jornada 1</title>
   <style>
     body {
-      font-family: sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem;
+      margin: 0;
+      background-color: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 2rem 1rem;
     }
-    input, button {
-      padding: 0.5rem;
-      margin: 0.5rem;
+
+    img {
+      width: 150px;
+      margin: 1rem 0;
     }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    h2 {
+      color: #FFD700;
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
     .card {
-      margin-top: 2rem;
+      background-color: #b00000;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 20px #b00000;
       font-size: 1.5rem;
       font-weight: bold;
-      color: darkblue;
+      display: inline-block;
+      margin-top: 2rem;
+    }
+
+    input, button {
+      padding: 0.7rem;
+      font-size: 1rem;
+      margin: 0.5rem;
+      border-radius: 8px;
+      border: none;
+    }
+
+    #claveInput {
+      width: 200px;
+    }
+
+    button {
+      background-color: #FFD700;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #error {
+      color: red;
     }
   </style>
 </head>
 <body>
-  <h1>Bienvenido a Carta Secreta</h1>
+  <img src="Logo.PNG"/>
+
+  <h1>Carta Secreta</h1>
+  <h2>JORNADA 1</h2>
+
   <div id="login">
     <p>Ingresa tu clave única:</p>
     <input type="text" id="claveInput" />
     <button onclick="verificarClave()">Entrar</button>
-    <p id="error" style="color: red;"></p>
+    <p id="error"></p>
   </div>
+
   <div id="cartaSecreta" style="display:none">
     <p>Tu carta secreta es:</p>
     <div class="card" id="cartaTexto"></div>
@@ -53,37 +99,32 @@
       'Gol al último minuto x2'
     ];
 
-    const claveInput = document.getElementById('claveInput');
-    const errorMsg = document.getElementById('error');
-    const cartaTexto = document.getElementById('cartaTexto');
-    const cartaDiv = document.getElementById('cartaSecreta');
-
     function verificarClave() {
-      const clave = claveInput.value.trim().toUpperCase();
-      const guardado = JSON.parse(localStorage.getItem(clave));
+      const clave = document.getElementById('claveInput').value.trim().toUpperCase();
+      const errorMsg = document.getElementById('error');
+      const cartaTexto = document.getElementById('cartaTexto');
+      const cartaDiv = document.getElementById('cartaSecreta');
 
       if (!clavesValidas.includes(clave)) {
         errorMsg.textContent = 'Clave inválida.';
         return;
       }
 
+      const guardado = JSON.parse(localStorage.getItem(clave));
       const ahora = Date.now();
 
       if (guardado && ahora < guardado.expira) {
-        mostrarCarta(guardado.carta);
+        cartaTexto.textContent = guardado.carta;
       } else {
-        const carta = cartas[Math.floor(Math.random() * cartas.length)];
-        const expira = ahora + 24 * 60 * 60 * 1000; // 24 horas
+       const seed = Date.now() + clave.length;
+const carta = cartas[seed % cartas.length];
+        const expira = ahora + 24 * 60 * 60 * 1000;
         localStorage.setItem(clave, JSON.stringify({ carta, expira }));
-        mostrarCarta(carta);
+        cartaTexto.textContent = carta;
       }
 
       document.getElementById('login').style.display = 'none';
       cartaDiv.style.display = 'block';
-    }
-
-    function mostrarCarta(carta) {
-      cartaTexto.textContent = carta;
     }
   </script>
 </body>
