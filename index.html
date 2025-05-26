@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Carta Secreta - JORNADA 1 </title>
+  <title>Carta Secreta - JORNADA 2</title>
   <style>
     body {
       margin: 0;
@@ -62,16 +62,17 @@
 
     #error {
       color: red;
+      margin-top: 1rem;
     }
   </style>
 </head>
 <body>
- <div style="text-align: center; margin-top: 20px;">
-  <img src="logo.png" alt="Logo del equipo" style="width: 150px; height: auto;">
-</div>
+  <div style="text-align: center; margin-top: 20px;">
+    <img src="logo.png" alt="Logo del equipo" style="width: 150px; height: auto;">
+  </div>
 
   <h1>Carta Secreta</h1>
-  <h2>JORNADA 1</h2>
+  <h2>JORNADA 2</h2>
 
   <div id="login">
     <p>Ingresa tu clave única:</p>
@@ -87,8 +88,8 @@
 
   <script>
     const clavesValidas = [
-      'CCJ1', 'TKJ1', 'LMJ1', 'LJ1C', 'LPJ1',
-      'SXJ1', 'TKDJ1', 'TTJ1', 'RBJ1', 'LGJ1',
+      'CCJ2', 'TKJ2', 'LM2J', 'LJ2C', 'LPJ2',
+      'SX2J', 'TKD2J', 'TT2J', 'RB2J', 'L2JG',
     ];
 
     const cartas = [
@@ -107,24 +108,31 @@
       const cartaTexto = document.getElementById('cartaTexto');
       const cartaDiv = document.getElementById('cartaSecreta');
 
+      // Validación de clave
       if (!clavesValidas.includes(clave)) {
         errorMsg.textContent = 'Clave inválida.';
         return;
       }
 
-      const guardado = JSON.parse(localStorage.getItem(clave));
-      const ahora = Date.now();
-
-      if (guardado && ahora < guardado.expira) {
-        cartaTexto.textContent = guardado.carta;
-      } else {
-       const seed = Date.now() + clave.length;
-const carta = cartas[seed % cartas.length];
-        const expira = ahora + 24 * 60 * 60 * 1000;
-        localStorage.setItem(clave, JSON.stringify({ carta, expira }));
-        cartaTexto.textContent = carta;
+      // Revisar si ya fue usada (localStorage)
+      const usadas = JSON.parse(localStorage.getItem('clavesUsadas') || '[]');
+      if (usadas.includes(clave)) {
+        errorMsg.textContent = 'Esta clave ya fue utilizada.';
+        return;
       }
 
+      // Generar y guardar carta
+      const ahora = Date.now();
+      const seed = ahora + clave.length;
+      const carta = cartas[seed % cartas.length];
+      const expira = ahora + 24 * 60 * 60 * 1000;
+
+      localStorage.setItem(clave, JSON.stringify({ carta, expira }));
+      usadas.push(clave);
+      localStorage.setItem('clavesUsadas', JSON.stringify(usadas));
+
+      // Mostrar carta
+      cartaTexto.textContent = carta;
       document.getElementById('login').style.display = 'none';
       cartaDiv.style.display = 'block';
     }
