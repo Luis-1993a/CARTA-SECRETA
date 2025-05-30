@@ -6,30 +6,15 @@
   <title>Carta Secreta - JORNADA 3</title>
   <style>
     body {
-      margin: 0;
       background-color: #111;
       color: #fff;
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 2rem 1rem;
+      margin: 0;
     }
-
-    img {
-      width: 150px;
-      margin: 1rem 0;
-    }
-
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-    }
-
-    h2 {
-      color: #FFD700;
-      font-size: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
+    h1, h2 { margin: 0.5rem 0; }
+    h2 { color: #FFD700; }
     .card {
       background-color: #b00000;
       padding: 1rem 2rem;
@@ -40,7 +25,6 @@
       display: inline-block;
       margin-top: 2rem;
     }
-
     input, button {
       padding: 0.7rem;
       font-size: 1rem;
@@ -48,29 +32,18 @@
       border-radius: 8px;
       border: none;
     }
-
-    #claveInput {
-      width: 200px;
-    }
-
+    #claveInput { width: 200px; }
     button {
       background-color: #FFD700;
       color: #000;
       font-weight: bold;
       cursor: pointer;
     }
-
-    #error {
-      color: red;
-      margin-top: 1rem;
-    }
+    #error { color: red; margin-top: 1rem; }
   </style>
 </head>
 <body>
-  <div style="text-align: center; margin-top: 20px;">
-    <img src="logo.png" alt="Logo del equipo" style="width: 150px; height: auto;">
-  </div>
-
+  <img src="logo.png" alt="Logo del equipo" style="width: 150px;">
   <h1>Carta Secreta</h1>
   <h2>JORNADA 3</h2>
 
@@ -86,12 +59,10 @@
     <div class="card" id="cartaTexto"></div>
   </div>
 
-  <!-- Scripts de Firebase desde la CDN -->
+  <!-- INICIA Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
   <script>
-    // Tu configuración de Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAn9FqQ_r1iJkBIv0C06GrkPgcBFJto5Ng",
       authDomain: "carta-secreta-d2393.firebaseapp.com",
@@ -102,14 +73,15 @@
       appId: "1:232679860017:web:695bfa1778a70af32cb210",
       measurementId: "G-RY3SDPQYCP"
     };
-
-    // Inicializar Firebase
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const database = firebase.database();
+  </script>
+  <!-- FIN Firebase -->
 
+  <script>
     const clavesValidas = [
       'CCF3', 'TKF3', 'LM3F', 'LF3C', 'LPF3','LCJ2','LM1J',
-      'SX3F', 'TKD3F', 'TT3F', 'RBF3', 'L3FG','TT2J','FBJ1'
+      'SX3F', 'TKD3F', 'TT3F', 'RBF3', 'L3FG','TT2J','FBJ1',
     ];
 
     const cartas = [
@@ -128,29 +100,38 @@
       const cartaTexto = document.getElementById('cartaTexto');
       const cartaDiv = document.getElementById('cartaSecreta');
 
+      errorMsg.textContent = '';
+
       if (!clavesValidas.includes(clave)) {
         errorMsg.textContent = 'Clave inválida.';
         return;
       }
 
-      // Verificar en Firebase si ya fue usada
-      db.ref('usos/' + clave).once('value', snapshot => {
+      const ref = database.ref('usos/' + clave);
+      ref.once('value', snapshot => {
         if (snapshot.exists()) {
-          errorMsg.textContent = 'Esta clave ya fue utilizada.';
+          // Ya fue usada
+          const data = snapshot.val();
+          cartaTexto.textContent = data.carta;
+          document.getElementById('login').style.display = 'none';
+          cartaDiv.style.display = 'block';
         } else {
-          // Generar carta y guardar uso
+          // No usada aún
           const ahora = Date.now();
           const seed = ahora + clave.length;
           const carta = cartas[seed % cartas.length];
 
-          db.ref('usos/' + clave).set({
+          ref.set({
             carta: carta,
             timestamp: ahora
+          }).then(() => {
+            cartaTexto.textContent = carta;
+            document.getElementById('login').style.display = 'none';
+            cartaDiv.style.display = 'block';
+          }).catch(err => {
+            console.error(err);
+            errorMsg.textContent = 'Error al guardar en la base de datos.';
           });
-
-          cartaTexto.textContent = carta;
-          document.getElementById('login').style.display = 'none';
-          cartaDiv.style.display = 'block';
         }
       });
     }
