@@ -40,6 +40,11 @@
       cursor: pointer;
     }
     #error { color: red; margin-top: 1rem; }
+    #cartaImagen {
+      margin-top: 1rem;
+      width: 200px;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -57,6 +62,7 @@
   <div id="cartaSecreta" style="display:none">
     <p>Tu carta secreta es:</p>
     <div class="card" id="cartaTexto"></div>
+    <img id="cartaImagen" />
   </div>
 
   <!-- INICIA Firebase -->
@@ -85,22 +91,24 @@
     ];
 
     const cartas = [
-      'Gol de cabeza x2',
-      'Robo carta secreta',
-      'Anula carta secreta',
-      'Si hay penalti, gol x2',
-      'Carta espejo',
-      'Joker (Carta libre)',
-      'Gol al último minuto x2'
+      { texto: 'Gol de cabeza x2', imagen: 'gol-cabeza.png' },
+      { texto: 'Robo carta secreta', imagen: 'robo.png' },
+      { texto: 'Anula carta secreta', imagen: 'anula.png' },
+      { texto: 'Si hay penalti, gol x2', imagen: 'penalti.png' },
+      { texto: 'Carta espejo', imagen: 'espejo.png' },
+      { texto: 'Joker (Carta libre)', imagen: 'joker.png' },
+      { texto: 'Gol al último minuto x2', imagen: 'ultimo-minuto.png' }
     ];
 
     function verificarClave() {
       const clave = document.getElementById('claveInput').value.trim().toUpperCase();
       const errorMsg = document.getElementById('error');
       const cartaTexto = document.getElementById('cartaTexto');
+      const cartaImagen = document.getElementById('cartaImagen');
       const cartaDiv = document.getElementById('cartaSecreta');
 
       errorMsg.textContent = '';
+      cartaImagen.style.display = 'none';
 
       if (!clavesValidas.includes(clave)) {
         errorMsg.textContent = 'Clave inválida.';
@@ -113,19 +121,27 @@
           // Ya fue usada
           const data = snapshot.val();
           cartaTexto.textContent = data.carta;
+          const encontrada = cartas.find(c => c.texto === data.carta);
+          if (encontrada) {
+            cartaImagen.src = 'cartas/' + encontrada.imagen;
+            cartaImagen.style.display = 'block';
+          }
           document.getElementById('login').style.display = 'none';
           cartaDiv.style.display = 'block';
         } else {
           // No usada aún
           const ahora = Date.now();
           const seed = ahora + clave.length;
-          const carta = cartas[seed % cartas.length];
+          const index = Math.floor(seed % cartas.length);
+          const carta = cartas[index];
 
           ref.set({
-            carta: carta,
+            carta: carta.texto,
             timestamp: ahora
           }).then(() => {
-            cartaTexto.textContent = carta;
+            cartaTexto.textContent = carta.texto;
+            cartaImagen.src = 'cartas/' + carta.imagen;
+            cartaImagen.style.display = 'block';
             document.getElementById('login').style.display = 'none';
             cartaDiv.style.display = 'block';
           }).catch(err => {
