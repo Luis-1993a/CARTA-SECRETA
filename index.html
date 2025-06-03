@@ -23,7 +23,7 @@
       font-size: 1.5rem;
       font-weight: bold;
       display: inline-block;
-      margin-top: 2rem;
+      margin-top: 1rem;
     }
     input, button {
       padding: 0.7rem;
@@ -41,9 +41,8 @@
     }
     #error { color: red; margin-top: 1rem; }
     #cartaImagen {
-      margin-top: 1rem;
       width: 200px;
-      display: none;
+      margin-top: 1rem;
     }
   </style>
 </head>
@@ -61,8 +60,8 @@
 
   <div id="cartaSecreta" style="display:none">
     <p>Tu carta secreta es:</p>
-    <div class="card" id="cartaTexto"></div>
     <img id="cartaImagen" />
+    <div class="card" id="cartaTexto"></div>
   </div>
 
   <!-- INICIA Firebase -->
@@ -86,8 +85,8 @@
 
   <script>
     const clavesValidas = [
-      'CCF4', 'TKF4', 'LM4F', 'LF4C', 'LPF4','LCJ2','4J2',
-      'SX4F', 'TKD4F', 'TT4F', 'RBF4', 'L4FG','TT2J',
+      'CCF4', 'TKF4', 'LM4F', 'LF4C', 'LPF4', 'LCJ2',
+      'SX4F', 'TKD4F', 'TT4F', 'RBF4', 'L4FG', 'TT2J',
     ];
 
     const cartas = [
@@ -108,7 +107,6 @@
       const cartaDiv = document.getElementById('cartaSecreta');
 
       errorMsg.textContent = '';
-      cartaImagen.style.display = 'none';
 
       if (!clavesValidas.includes(clave)) {
         errorMsg.textContent = 'Clave inválida.';
@@ -118,30 +116,22 @@
       const ref = database.ref('usos/' + clave);
       ref.once('value', snapshot => {
         if (snapshot.exists()) {
-          // Ya fue usada
           const data = snapshot.val();
-          cartaTexto.textContent = data.carta;
-          const encontrada = cartas.find(c => c.texto === data.carta);
-          if (encontrada) {
-            cartaImagen.src = 'cartas/' + encontrada.imagen;
-            cartaImagen.style.display = 'block';
-          }
+          cartaTexto.textContent = data.carta.texto;
+          cartaImagen.src = 'Carta/' + data.carta.imagen;
           document.getElementById('login').style.display = 'none';
           cartaDiv.style.display = 'block';
         } else {
-          // No usada aún
           const ahora = Date.now();
           const seed = ahora + clave.length;
-          const index = Math.floor(seed % cartas.length);
-          const carta = cartas[index];
+          const carta = cartas[seed % cartas.length];
 
           ref.set({
-            carta: carta.texto,
+            carta: carta,
             timestamp: ahora
           }).then(() => {
             cartaTexto.textContent = carta.texto;
-            cartaImagen.src = 'cartas/' + carta.imagen;
-            cartaImagen.style.display = 'block';
+            cartaImagen.src = 'Carta/' + carta.imagen;
             document.getElementById('login').style.display = 'none';
             cartaDiv.style.display = 'block';
           }).catch(err => {
